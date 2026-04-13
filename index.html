@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>MBB Bridge — Staging Test</title>
+  <title>MBB Bridge — Sales Invoices</title>
   <script src="https://dszd2mvdaxbkw.cloudfront.net/mbb-bridge/mbb-bridge-sdk.js"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -14,15 +14,13 @@
       --border:     #e2e8f0;
       --text:       #0f172a;
       --text-muted: #64748b;
-      --header-h:   56px;
-      --log-h:      200px;
+      --header-h:   54px;
+      --log-h:      180px;
 
       --blue:   #3b82f6;
-      --purple: #8b5cf6;
       --green:  #22c55e;
       --amber:  #f59e0b;
       --red:    #ef4444;
-      --teal:   #14b8a6;
     }
 
     body {
@@ -30,7 +28,6 @@
       background: var(--bg);
       color: var(--text);
       font-size: 14px;
-      min-height: 100vh;
     }
 
     /* ─── Header ──────────────────────────────────────────────────────────── */
@@ -43,175 +40,145 @@
       display: flex;
       align-items: center;
       padding: 0 20px;
-      gap: 12px;
+      gap: 14px;
       z-index: 100;
     }
 
-    .header-title { font-size: 15px; font-weight: 700; }
-    .header-sub   { font-size: 12px; color: var(--text-muted); }
+    .header-brand { font-size: 14px; font-weight: 700; flex-shrink: 0; }
+
+    .header-divider {
+      width: 1px; height: 18px;
+      background: var(--border);
+      flex-shrink: 0;
+    }
+
+    .header-company {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text);
+      max-width: 200px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .header-company.loading {
+      width: 120px; height: 13px;
+      background: var(--bg);
+      border-radius: 4px;
+      animation: shimmer 1.4s ease infinite;
+    }
+
     .header-spacer { flex: 1; }
+
+    .user-chip {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .avatar {
+      width: 28px; height: 28px;
+      border-radius: 50%;
+      background: var(--blue);
+      color: white;
+      font-size: 11px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
 
     .conn-badge {
       display: flex;
       align-items: center;
-      gap: 6px;
-      font-size: 12px;
+      gap: 5px;
+      font-size: 11px;
       font-weight: 500;
-      padding: 4px 10px;
+      padding: 3px 9px;
       border-radius: 20px;
       background: #f1f5f9;
       color: var(--text-muted);
       transition: all 0.3s;
+      flex-shrink: 0;
     }
     .conn-badge.connected { background: #dcfce7; color: #166534; }
-    .conn-badge.error     { background: #fee2e2; color: #991b1b; }
 
     .conn-dot {
-      width: 7px; height: 7px;
+      width: 6px; height: 6px;
       border-radius: 50%;
       background: currentColor;
-      opacity: 0.7;
     }
 
     /* ─── Page ────────────────────────────────────────────────────────────── */
     .page {
       margin-top: var(--header-h);
-      padding: 24px 20px;
-      padding-bottom: calc(var(--log-h) + 32px);
-      max-width: 860px;
+      padding: 20px;
+      padding-bottom: calc(var(--log-h) + 28px);
+      max-width: 960px;
       margin-left: auto;
       margin-right: auto;
-    }
-
-    /* ─── Section ─────────────────────────────────────────────────────────── */
-    .section {
-      margin-bottom: 24px;
-    }
-
-    .section-title {
-      font-size: 11px;
-      font-weight: 700;
-      color: var(--text-muted);
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      margin-bottom: 10px;
-    }
-
-    /* ─── Hero Grid (User + Company) ──────────────────────────────────────── */
-    .hero-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 12px;
-    }
-
-    @media (max-width: 600px) {
-      .hero-grid { grid-template-columns: 1fr; }
     }
 
     /* ─── Card ────────────────────────────────────────────────────────────── */
     .card {
       background: var(--surface);
       border: 1px solid var(--border);
-      border-radius: 14px;
-      padding: 18px;
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 14px;
     }
 
-    .card-header {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      margin-bottom: 16px;
-    }
-
-    .card-icon {
-      width: 36px; height: 36px;
-      border-radius: 10px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 18px;
-      flex-shrink: 0;
-    }
-
-    .card-name  { font-size: 14px; font-weight: 700; }
-    .card-sub   { font-size: 11px; color: var(--text-muted); margin-top: 1px; }
-
-    /* ─── Field rows ──────────────────────────────────────────────────────── */
-    .field-list { display: flex; flex-direction: column; gap: 8px; }
-
-    .field-row {
-      display: flex;
-      align-items: flex-start;
-      gap: 10px;
-    }
-
-    .field-label {
-      flex-shrink: 0;
-      width: 70px;
-      font-size: 11px;
-      font-weight: 600;
+    .card-label {
+      font-size: 10px;
+      font-weight: 700;
       color: var(--text-muted);
       text-transform: uppercase;
-      letter-spacing: 0.04em;
-      padding-top: 1px;
+      letter-spacing: 0.08em;
+      margin-bottom: 12px;
     }
 
-    .field-value {
-      font-size: 13px;
-      color: var(--text);
-      word-break: break-all;
-      flex: 1;
-    }
-
-    .field-value.loading {
-      height: 14px;
-      background: var(--bg);
-      border-radius: 4px;
-      animation: shimmer 1.4s ease infinite;
-      width: 80%;
-    }
-
-    .field-value.empty { color: var(--text-muted); font-style: italic; }
-
-    @keyframes shimmer {
-      0%, 100% { opacity: 0.5; }
-      50%       { opacity: 1; }
-    }
-
-    /* ─── Subscription pill ───────────────────────────────────────────────── */
-    .sub-row {
+    /* ─── Auth ────────────────────────────────────────────────────────────── */
+    .auth-row {
       display: flex;
+      gap: 8px;
       align-items: center;
-      gap: 12px;
       flex-wrap: wrap;
     }
 
-    .status-pill {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      padding: 5px 12px;
-      border-radius: 20px;
-      font-size: 13px;
-      font-weight: 600;
-      background: var(--bg);
-      color: var(--text-muted);
+    .input {
+      flex: 1;
+      min-width: 220px;
+      height: 34px;
       border: 1px solid var(--border);
-      transition: all 0.3s;
+      border-radius: 8px;
+      padding: 0 10px;
+      font-size: 13px;
+      font-family: "SF Mono", "Fira Code", monospace;
+      color: var(--text);
+      background: var(--bg);
+      outline: none;
+      transition: border-color 0.15s;
     }
-    .status-pill.subscribed     { background: #dcfce7; color: #166534; border-color: #86efac; }
-    .status-pill.not-subscribed { background: #fee2e2; color: #991b1b; border-color: #fca5a5; }
+    .input:focus { border-color: var(--blue); background: white; }
 
-    .status-dot {
-      width: 7px; height: 7px;
-      border-radius: 50%;
-      background: currentColor;
-      opacity: 0.7;
+    .token-badge {
+      display: none;
+      align-items: center;
+      gap: 5px;
+      font-size: 12px;
+      font-weight: 500;
+      padding: 3px 10px;
+      border-radius: 20px;
+      background: #dcfce7;
+      color: #166534;
     }
+    .token-badge.visible { display: flex; }
 
-    /* ─── Actions row ─────────────────────────────────────────────────────── */
-    .actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
-
+    /* ─── Buttons ─────────────────────────────────────────────────────────── */
     .btn {
       display: inline-flex;
       align-items: center;
@@ -225,76 +192,125 @@
       cursor: pointer;
       transition: opacity 0.15s, transform 0.1s;
       white-space: nowrap;
+      flex-shrink: 0;
     }
     .btn:hover   { opacity: 0.88; }
     .btn:active  { transform: scale(0.97); }
     .btn:disabled{ opacity: 0.45; cursor: not-allowed; transform: none; }
 
-    .btn-blue   { background: var(--blue);   color: white; }
-    .btn-purple { background: var(--purple); color: white; }
-    .btn-green  { background: var(--green);  color: white; }
-    .btn-amber  { background: var(--amber);  color: white; }
-    .btn-red    { background: var(--red);    color: white; }
-    .btn-teal   { background: var(--teal);   color: white; }
-    .btn-ghost  { background: var(--bg); color: var(--text); border: 1px solid var(--border); }
+    .btn-blue  { background: var(--blue);  color: white; }
+    .btn-ghost { background: var(--bg); color: var(--text); border: 1px solid var(--border); }
 
-    /* ─── Input ───────────────────────────────────────────────────────────── */
-    .input {
-      flex: 1;
-      min-width: 160px;
-      height: 34px;
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 0 10px;
-      font-size: 13px;
-      color: var(--text);
-      background: var(--bg);
-      outline: none;
-      transition: border-color 0.15s;
-    }
-    .input:focus { border-color: var(--blue); background: white; }
-
-    .checkbox-row {
+    /* ─── Toolbar ─────────────────────────────────────────────────────────── */
+    .toolbar {
       display: flex;
       align-items: center;
-      gap: 7px;
-      font-size: 13px;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .toolbar-spacer { flex: 1; }
+
+    .count-text {
+      font-size: 12px;
       color: var(--text-muted);
-      cursor: pointer;
-    }
-    .checkbox-row input { cursor: pointer; accent-color: var(--blue); }
-
-    /* ─── Inline cards row ────────────────────────────────────────────────── */
-    .card-row {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 12px;
     }
 
-    .card-row .card { flex: 1; min-width: 200px; }
-
-    /* ─── Paywall events ──────────────────────────────────────────────────── */
-    .event-list {
+    .page-nav {
       display: flex;
-      flex-wrap: wrap;
+      align-items: center;
       gap: 6px;
-      margin-top: 12px;
     }
 
-    .event-pill {
+    .page-info {
+      font-size: 12px;
+      color: var(--text-muted);
+      min-width: 60px;
+      text-align: center;
+    }
+
+    /* ─── Table ───────────────────────────────────────────────────────────── */
+    .table-wrap {
+      overflow-x: auto;
+      margin-top: 14px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+
+    thead th {
+      background: var(--bg);
+      padding: 10px 14px;
+      text-align: left;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      border-bottom: 1px solid var(--border);
+      white-space: nowrap;
+    }
+
+    tbody td {
+      padding: 11px 14px;
+      border-bottom: 1px solid var(--border);
+      color: var(--text);
+      vertical-align: middle;
+    }
+
+    tbody tr:last-child td { border-bottom: none; }
+    tbody tr:hover td { background: #f8fafc; }
+
+    .td-date   { white-space: nowrap; color: var(--text-muted); font-size: 12px; }
+    .td-inv    { font-weight: 600; color: var(--blue); }
+    .td-party  { max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .td-amount { font-weight: 600; text-align: right; white-space: nowrap; }
+
+    /* ─── Status pills ────────────────────────────────────────────────────── */
+    .pill {
       display: inline-flex;
       align-items: center;
-      gap: 5px;
-      padding: 3px 10px;
+      gap: 4px;
+      padding: 2px 8px;
       border-radius: 20px;
       font-size: 11px;
-      font-weight: 500;
-      background: var(--bg);
-      color: var(--text-muted);
-      border: 1px solid var(--border);
-      transition: all 0.3s;
+      font-weight: 600;
+      white-space: nowrap;
     }
-    .event-pill.fired { background: #fef3c7; color: #92400e; border-color: #fcd34d; }
+
+    .pill-paid     { background: #dcfce7; color: #166534; }
+    .pill-unpaid   { background: #fee2e2; color: #991b1b; }
+    .pill-partial  { background: #fef3c7; color: #92400e; }
+    .pill-overdue  { background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; }
+
+    /* ─── Skeleton ────────────────────────────────────────────────────────── */
+    .skeleton {
+      display: inline-block;
+      height: 12px;
+      border-radius: 4px;
+      background: var(--bg);
+      animation: shimmer 1.4s ease infinite;
+    }
+
+    @keyframes shimmer {
+      0%, 100% { opacity: 0.5; }
+      50%       { opacity: 1; }
+    }
+
+    /* ─── Empty / error state ─────────────────────────────────────────────── */
+    .state-row td {
+      padding: 40px 14px;
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 13px;
+    }
+
+    .state-row.err td { color: #991b1b; }
 
     /* ─── Log panel ───────────────────────────────────────────────────────── */
     .log-panel {
@@ -312,14 +328,14 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 6px 14px;
+      padding: 5px 14px;
       border-bottom: 1px solid #1e293b;
       flex-shrink: 0;
     }
 
     .log-title {
-      font-size: 11px;
-      font-weight: 600;
+      font-size: 10px;
+      font-weight: 700;
       color: #475569;
       text-transform: uppercase;
       letter-spacing: 0.08em;
@@ -339,9 +355,9 @@
     .log-body {
       flex: 1;
       overflow-y: auto;
-      padding: 8px 14px;
+      padding: 6px 14px;
       font-family: "SF Mono", "Fira Code", monospace;
-      font-size: 11.5px;
+      font-size: 11px;
     }
 
     .log-entry {
@@ -351,11 +367,7 @@
       line-height: 1.6;
     }
 
-    .log-tag {
-      flex-shrink: 0;
-      font-weight: 600;
-      min-width: 60px;
-    }
+    .log-tag { flex-shrink: 0; font-weight: 600; min-width: 56px; }
 
     .log-entry.out  .log-tag { color: #60a5fa; }
     .log-entry.in   .log-tag { color: #4ade80; }
@@ -366,20 +378,20 @@
     .log-entry.in   .log-msg { color: #86efac; }
     .log-entry.info .log-msg { color: #fcd34d; }
     .log-entry.err  .log-msg { color: #fca5a5; }
-
-    /* ─── Divider ─────────────────────────────────────────────────────────── */
-    .divider { height: 1px; background: var(--border); margin: 4px 0 16px; }
   </style>
 </head>
 <body>
 
   <!-- ─── Header ──────────────────────────────────────────────────────────── -->
   <header class="header">
-    <div>
-      <div class="header-title">MBB Bridge · Staging Test</div>
-      <div class="header-sub">SDK <span id="sdk-version">loading…</span></div>
-    </div>
+    <div class="header-brand">MBB Bridge · Staging</div>
+    <div class="header-divider"></div>
+    <div class="header-company loading" id="header-company"></div>
     <div class="header-spacer"></div>
+    <div class="user-chip" id="user-chip" style="display:none">
+      <div class="avatar" id="user-avatar">?</div>
+      <span id="user-name"></span>
+    </div>
     <div class="conn-badge" id="conn-badge">
       <div class="conn-dot"></div>
       <span id="conn-label">Connecting…</span>
@@ -389,120 +401,54 @@
   <!-- ─── Page ────────────────────────────────────────────────────────────── -->
   <div class="page">
 
-    <!-- ── User + Company ──────────────────────────────────────────────── -->
-    <div class="section">
-      <div class="section-title">Identity</div>
-      <div class="hero-grid">
-
-        <!-- User card -->
-        <div class="card">
-          <div class="card-header">
-            <div class="card-icon" style="background:#f5f3ff">👤</div>
-            <div>
-              <div class="card-name">User</div>
-              <div class="card-sub">Logged-in user details</div>
-            </div>
-            <div style="flex:1"></div>
-            <button class="btn btn-ghost" style="font-size:12px;height:28px;padding:0 10px" onclick="loadUser()">↺ Refresh</button>
-          </div>
-          <div class="field-list" id="user-fields">
-            <div class="field-row"><span class="field-label">ID</span><span class="field-value loading"></span></div>
-            <div class="field-row"><span class="field-label">Name</span><span class="field-value loading"></span></div>
-            <div class="field-row"><span class="field-label">Email</span><span class="field-value loading" style="width:90%"></span></div>
-            <div class="field-row"><span class="field-label">Mobile</span><span class="field-value loading" style="width:60%"></span></div>
-            <div class="field-row"><span class="field-label">Role</span><span class="field-value loading" style="width:50%"></span></div>
-          </div>
-        </div>
-
-        <!-- Company card -->
-        <div class="card">
-          <div class="card-header">
-            <div class="card-icon" style="background:#eff6ff">🏢</div>
-            <div>
-              <div class="card-name">Company</div>
-              <div class="card-sub">Selected company details</div>
-            </div>
-            <div style="flex:1"></div>
-            <button class="btn btn-ghost" style="font-size:12px;height:28px;padding:0 10px" onclick="loadCompany()">↺ Refresh</button>
-          </div>
-          <div class="field-list" id="company-fields">
-            <div class="field-row"><span class="field-label">ID</span><span class="field-value loading"></span></div>
-            <div class="field-row"><span class="field-label">Name</span><span class="field-value loading"></span></div>
-            <div class="field-row"><span class="field-label">GSTIN</span><span class="field-value loading" style="width:65%"></span></div>
-          </div>
-        </div>
-
+    <!-- Auth card -->
+    <div class="card">
+      <div class="card-label">Auth — Bearer Token</div>
+      <div class="auth-row">
+        <input class="input" id="token-input" type="password" placeholder="Paste your Bearer token here…" />
+        <button class="btn btn-ghost" onclick="setToken()">Set Token</button>
+        <div class="token-badge" id="token-badge">✓ Token set</div>
       </div>
     </div>
 
-    <!-- ── Subscription ─────────────────────────────────────────────────── -->
-    <div class="section">
-      <div class="section-title">Subscription</div>
-      <div class="card">
-        <div class="sub-row">
-          <div class="status-pill" id="sub-pill">
-            <div class="status-dot"></div>
-            <span id="sub-label">Checking…</span>
-          </div>
-          <button class="btn btn-green" onclick="loadSubscription()">Check Subscription</button>
+    <!-- Vouchers card -->
+    <div class="card">
+      <div class="card-label">Sales Invoices</div>
+
+      <div class="toolbar">
+        <button class="btn btn-blue" id="fetch-btn" onclick="loadVouchers(1)">Fetch Vouchers</button>
+        <span class="count-text" id="count-text"></span>
+        <div class="toolbar-spacer"></div>
+        <div class="page-nav" id="page-nav" style="display:none">
+          <button class="btn btn-ghost" id="prev-btn" onclick="prevPage()" disabled>← Prev</button>
+          <span class="page-info" id="page-info"></span>
+          <button class="btn btn-ghost" id="next-btn" onclick="nextPage()" disabled>Next →</button>
         </div>
       </div>
-    </div>
 
-    <!-- ── Notifications ────────────────────────────────────────────────── -->
-    <div class="section">
-      <div class="section-title">Notifications</div>
-      <div class="card">
-        <div class="actions">
-          <input class="input" id="notif-msg" value="Hello from staging test!" placeholder="Toast message…" />
-          <button class="btn btn-green"  onclick="notif('success')">✓ Success</button>
-          <button class="btn btn-amber"  onclick="notif('warning')">⚠ Warning</button>
-          <button class="btn btn-red"    onclick="notif('error')">✕ Error</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- ── Navigation ───────────────────────────────────────────────────── -->
-    <div class="section">
-      <div class="section-title">Navigation</div>
-      <div class="card-row">
-        <div class="card">
-          <div style="font-size:12px;font-weight:600;color:var(--text-muted);margin-bottom:10px">navigateHome()</div>
-          <button class="btn btn-teal" onclick="nav_home()">Navigate Home</button>
-        </div>
-        <div class="card">
-          <div style="font-size:12px;font-weight:600;color:var(--text-muted);margin-bottom:10px">navigateBack()</div>
-          <div class="actions">
-            <label class="checkbox-row">
-              <input type="checkbox" id="nav-fallback" />
-              isFallbackToHome
-            </label>
-            <button class="btn btn-teal" onclick="nav_back()">Navigate Back</button>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- ── Paywall ───────────────────────────────────────────────────────── -->
-    <div class="section">
-      <div class="section-title">Paywall</div>
-      <div class="card">
-        <div class="actions">
-          <button class="btn btn-amber" onclick="paywall_show()">Show Paywall</button>
-        </div>
-        <div class="event-list">
-          <div class="event-pill" id="evt-paywall-open">⬜ onPaywallOpen</div>
-          <div class="event-pill" id="evt-paywall-closed">⬜ onPaywallClosed</div>
-          <div class="event-pill" id="evt-payment-init">⬜ onPaymentInit</div>
-          <div class="event-pill" id="evt-payment-success">⬜ onPaymentSuccess</div>
-          <div class="event-pill" id="evt-payment-failed">⬜ onPaymentFailed</div>
-        </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Invoice #</th>
+              <th>Party</th>
+              <th style="text-align:right">Amount</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="voucher-tbody">
+            <tr class="state-row">
+              <td colspan="5">Set a Bearer token and click Fetch Vouchers to load sales invoices.</td>
+            </tr>
+          </tbody>
+        </table>
       </div>
     </div>
 
   </div>
 
-  <!-- ─── Log Panel ────────────────────────────────────────────────────────── -->
+  <!-- ─── Log panel ────────────────────────────────────────────────────────── -->
   <div class="log-panel">
     <div class="log-header">
       <span class="log-title">Message Log</span>
@@ -517,255 +463,231 @@
   </div>
 
   <script>
-    /* ═══════════════════════════════════════════════════════════════════════
-       LOG UTILITIES
-    ═══════════════════════════════════════════════════════════════════════ */
+    /* ════════════════════════════════════════════════════════════════════════
+       STATE
+    ════════════════════════════════════════════════════════════════════════ */
+    var authToken   = '';
+    var companyId   = '';
+    var currentPage = 1;
+    var totalCount  = 0;
+    var perPage     = 25;
 
-    function log(direction, message) {
-      var body = document.getElementById('log-body');
+    /* ════════════════════════════════════════════════════════════════════════
+       LOG
+    ════════════════════════════════════════════════════════════════════════ */
+    function log(dir, msg) {
+      var body  = document.getElementById('log-body');
       var entry = document.createElement('div');
-      entry.className = 'log-entry ' + direction;
+      entry.className = 'log-entry ' + dir;
 
       var tag = document.createElement('span');
       tag.className = 'log-tag';
-      tag.textContent = direction === 'out' ? '→ shell'
-                      : direction === 'in'  ? '← shell'
-                      : direction === 'err' ? '✕ error'
+      tag.textContent = dir === 'out'  ? '→ api'
+                      : dir === 'in'   ? '← api'
+                      : dir === 'err'  ? '✕ error'
                       : 'ℹ info';
 
-      var msg = document.createElement('span');
-      msg.className = 'log-msg';
-      msg.textContent = typeof message === 'string' ? message : JSON.stringify(message);
+      var m = document.createElement('span');
+      m.className = 'log-msg';
+      m.textContent = typeof msg === 'string' ? msg : JSON.stringify(msg);
 
       entry.appendChild(tag);
-      entry.appendChild(msg);
+      entry.appendChild(m);
       body.appendChild(entry);
       body.scrollTop = body.scrollHeight;
     }
 
-    function clearLog() {
-      document.getElementById('log-body').innerHTML = '';
-    }
+    function clearLog() { document.getElementById('log-body').innerHTML = ''; }
 
-    /* ═══════════════════════════════════════════════════════════════════════
-       RENDER HELPERS
-    ═══════════════════════════════════════════════════════════════════════ */
-
-    function renderFields(containerId, fields) {
-      var container = document.getElementById(containerId);
-      container.innerHTML = '';
-      fields.forEach(function(f) {
-        var row = document.createElement('div');
-        row.className = 'field-row';
-
-        var label = document.createElement('span');
-        label.className = 'field-label';
-        label.textContent = f.label;
-
-        var value = document.createElement('span');
-        if (f.error) {
-          value.className = 'field-value empty';
-          value.textContent = '— error loading';
-        } else if (f.value == null || f.value === '' || f.value === undefined) {
-          value.className = 'field-value empty';
-          value.textContent = '—';
-        } else {
-          value.className = 'field-value';
-          value.textContent = f.value;
-        }
-
-        row.appendChild(label);
-        row.appendChild(value);
-        container.appendChild(row);
-      });
-    }
-
-    function setLoadingFields(containerId, fieldLabels) {
-      var container = document.getElementById(containerId);
-      container.innerHTML = '';
-      fieldLabels.forEach(function(label) {
-        var row = document.createElement('div');
-        row.className = 'field-row';
-
-        var l = document.createElement('span');
-        l.className = 'field-label';
-        l.textContent = label;
-
-        var v = document.createElement('span');
-        v.className = 'field-value loading';
-
-        row.appendChild(l);
-        row.appendChild(v);
-        container.appendChild(row);
-      });
-    }
-
-    /* ═══════════════════════════════════════════════════════════════════════
-       INIT
-    ═══════════════════════════════════════════════════════════════════════ */
-
+    /* ════════════════════════════════════════════════════════════════════════
+       BRIDGE INIT
+    ════════════════════════════════════════════════════════════════════════ */
     MBBridge.on({ type: 'MBB_SHELL_ACK', callback: function(msg) {
       var badge = document.getElementById('conn-badge');
       badge.className = 'conn-badge connected';
       document.getElementById('conn-label').textContent = 'Connected';
-      log('in', msg);
-      log('info', 'Bridge connected to shell ✓');
+      log('info', 'Bridge connected ✓');
     }});
 
-    // Register paywall listeners before init so no events are missed
-    MBBridge.paywall.onPaywallOpen(function() {
-      fireEvent('evt-paywall-open', 'onPaywallOpen');
-    });
-    MBBridge.paywall.onPaywallClosed(function() {
-      fireEvent('evt-paywall-closed', 'onPaywallClosed');
-    });
-    MBBridge.paywall.onPaymentInit(function() {
-      fireEvent('evt-payment-init', 'onPaymentInit');
-    });
-    MBBridge.paywall.onPaymentSuccess(function() {
-      fireEvent('evt-payment-success', 'onPaymentSuccess');
-      log('info', 'Payment successful — feature unlocked ✓');
-    });
-    MBBridge.paywall.onPaymentFailed(function() {
-      fireEvent('evt-payment-failed', 'onPaymentFailed');
-      log('info', 'Payment failed');
-    });
-
     MBBridge.init({ appId: 'staging-test-app', isDebug: true });
-    document.getElementById('sdk-version').textContent = 'v' + MBBridge.version;
-    log('info', 'init() → appId: staging-test-app');
 
-    // Auto-load everything on mount
-    Promise.all([loadUser(), loadCompany(), loadSubscription()]);
+    // Load company + user for header
+    MBBridge.company.getSelectedCompany().then(function(company) {
+      var el = document.getElementById('header-company');
+      el.className = 'header-company';
+      el.textContent = company.name || '—';
+      companyId = company.id || '';
+      log('info', 'Company: ' + company.name + ' (id: ' + companyId + ')');
+    }).catch(function(err) {
+      var el = document.getElementById('header-company');
+      el.className = 'header-company';
+      el.textContent = 'No company';
+    });
 
-    /* ═══════════════════════════════════════════════════════════════════════
-       USER
-    ═══════════════════════════════════════════════════════════════════════ */
+    MBBridge.user.getUser().then(function(user) {
+      var name = user.name || user.email || '?';
+      var initials = name.split(' ').map(function(w) { return w[0]; }).slice(0, 2).join('').toUpperCase();
+      document.getElementById('user-avatar').textContent = initials || '?';
+      document.getElementById('user-name').textContent   = name;
+      document.getElementById('user-chip').style.display = 'flex';
+    }).catch(function() {});
 
-    async function loadUser() {
-      setLoadingFields('user-fields', ['ID', 'Name', 'Email', 'Mobile', 'Role']);
+    /* ════════════════════════════════════════════════════════════════════════
+       AUTH TOKEN
+    ════════════════════════════════════════════════════════════════════════ */
+    function setToken() {
+      var val = document.getElementById('token-input').value.trim();
+      if (!val) return;
+      // Strip leading "Bearer " if pasted with prefix
+      authToken = val.replace(/^Bearer\s+/i, '');
+      document.getElementById('token-badge').className = 'token-badge visible';
+      log('info', 'Bearer token set ✓');
+    }
+
+    // Also allow Enter key in token input
+    document.getElementById('token-input').addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') setToken();
+    });
+
+    /* ════════════════════════════════════════════════════════════════════════
+       VOUCHERS
+    ════════════════════════════════════════════════════════════════════════ */
+    function formatDate(dateStr) {
+      if (!dateStr) return '—';
+      var d = new Date(dateStr);
+      if (isNaN(d)) return dateStr;
+      return d.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+    }
+
+    function formatAmount(amt) {
+      if (amt == null || amt === '') return '—';
+      var num = parseFloat(amt);
+      if (isNaN(num)) return amt;
+      return '₹' + num.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+
+    function statusPill(voucher) {
+      if (voucher.is_overdue) {
+        return '<span class="pill pill-overdue">Overdue</span>';
+      }
+      var ps = (voucher.payment_status || '').toLowerCase();
+      if (ps === 'paid')    return '<span class="pill pill-paid">Paid</span>';
+      if (ps === 'partial') return '<span class="pill pill-partial">Partial</span>';
+      return '<span class="pill pill-unpaid">Unpaid</span>';
+    }
+
+    function showSkeleton() {
+      var rows = '';
+      for (var i = 0; i < 8; i++) {
+        rows += '<tr>'
+          + '<td class="td-date"><span class="skeleton" style="width:76px"></span></td>'
+          + '<td class="td-inv"><span class="skeleton" style="width:70px"></span></td>'
+          + '<td class="td-party"><span class="skeleton" style="width:' + (100 + i * 12) + 'px"></span></td>'
+          + '<td class="td-amount" style="text-align:right"><span class="skeleton" style="width:64px"></span></td>'
+          + '<td><span class="skeleton" style="width:52px"></span></td>'
+          + '</tr>';
+      }
+      document.getElementById('voucher-tbody').innerHTML = rows;
+    }
+
+    function showState(message, isError) {
+      var cls = isError ? 'state-row err' : 'state-row';
+      document.getElementById('voucher-tbody').innerHTML =
+        '<tr class="' + cls + '"><td colspan="5">' + message + '</td></tr>';
+    }
+
+    async function loadVouchers(page) {
+      if (!authToken) {
+        showState('Please set a Bearer token first.', false);
+        log('err', 'No Bearer token set — enter token and click Set Token');
+        return;
+      }
+
+      currentPage = page || 1;
+      showSkeleton();
+      document.getElementById('page-nav').style.display = 'none';
+      document.getElementById('count-text').textContent = '';
+      document.getElementById('fetch-btn').disabled = true;
+
+      var params = new URLSearchParams({
+        voucher_type: '0',
+        status:       'final',
+        page:         String(currentPage),
+        per_page:     String(perPage),
+        sort_by:      'date',
+        sort_order:   'desc',
+      });
+
+      var url = 'https://niobooks.in/api/web/invoices?' + params.toString();
+
+      log('out', 'GET ' + url);
+
       try {
-        log('out', { type: 'MBB_GET_USER_DATA' });
-        var user = await MBBridge.user.getUser();
-        log('in', { type: 'MBB_GET_USER_DATA_SUCCESS', user: user });
-        renderFields('user-fields', [
-          { label: 'ID',     value: user.id },
-          { label: 'Name',   value: user.name },
-          { label: 'Email',  value: user.email },
-          { label: 'Mobile', value: user.mobile },
-          { label: 'Role',   value: user.role },
-        ]);
+        var res = await fetch(url, {
+          method: 'GET',
+          headers: {
+            'Authorization': 'Bearer ' + authToken,
+            'company-id':    companyId,
+            'Accept':        'application/json',
+            'client':        'web',
+          },
+        });
+
+        if (!res.ok) {
+          var errText = await res.text();
+          throw new Error('HTTP ' + res.status + ': ' + errText.slice(0, 120));
+        }
+
+        var data = await res.json();
+        totalCount = data.total_count || 0;
+        var vouchers = data.vouchers || [];
+
+        log('in', 'total_count=' + totalCount + ', page=' + currentPage + ', received=' + vouchers.length + ' vouchers');
+
+        if (data.is_empty_state || vouchers.length === 0) {
+          showState('No sales invoices found.', false);
+        } else {
+          renderTable(vouchers);
+        }
+
+        // Update toolbar
+        var totalPages = Math.ceil(totalCount / perPage);
+        document.getElementById('count-text').textContent = totalCount + ' invoices';
+        document.getElementById('page-info').textContent  = 'Page ' + currentPage + ' / ' + (totalPages || 1);
+        document.getElementById('page-nav').style.display = 'flex';
+        document.getElementById('prev-btn').disabled = currentPage <= 1;
+        document.getElementById('next-btn').disabled = currentPage >= totalPages;
+
       } catch (err) {
-        log('err', 'getUser() failed: ' + err.message);
-        renderFields('user-fields', [
-          { label: 'ID',     error: true },
-          { label: 'Name',   error: true },
-          { label: 'Email',  error: true },
-          { label: 'Mobile', error: true },
-          { label: 'Role',   error: true },
-        ]);
-        MBBridge.notification.showError({ message: 'Failed to load user.' });
+        showState('Error: ' + err.message, true);
+        log('err', err.message);
+      } finally {
+        document.getElementById('fetch-btn').disabled = false;
       }
     }
 
-    /* ═══════════════════════════════════════════════════════════════════════
-       COMPANY
-    ═══════════════════════════════════════════════════════════════════════ */
-
-    async function loadCompany() {
-      setLoadingFields('company-fields', ['ID', 'Name', 'GSTIN']);
-      try {
-        log('out', { type: 'MBB_SELECTED_COMPANY_DATA' });
-        var company = await MBBridge.company.getSelectedCompany();
-        log('in', { type: 'MBB_SELECTED_COMPANY_DATA_SUCCESS', company: company });
-        renderFields('company-fields', [
-          { label: 'ID',    value: company.id },
-          { label: 'Name',  value: company.name },
-          { label: 'GSTIN', value: company.gstin },
-        ]);
-      } catch (err) {
-        log('err', 'getSelectedCompany() failed: ' + err.message);
-        renderFields('company-fields', [
-          { label: 'ID',    error: true },
-          { label: 'Name',  error: true },
-          { label: 'GSTIN', error: true },
-        ]);
-        MBBridge.notification.showError({ message: 'Failed to load company.' });
+    function renderTable(vouchers) {
+      var html = '';
+      for (var i = 0; i < vouchers.length; i++) {
+        var v = vouchers[i];
+        html += '<tr>'
+          + '<td class="td-date">' + formatDate(v.date) + '</td>'
+          + '<td class="td-inv">'  + (v.serial_number || '—') + '</td>'
+          + '<td class="td-party">' + (v.contact_name  || '—') + '</td>'
+          + '<td class="td-amount">' + formatAmount(v.amount) + '</td>'
+          + '<td>' + statusPill(v) + '</td>'
+          + '</tr>';
       }
+      document.getElementById('voucher-tbody').innerHTML = html;
     }
 
-    /* ═══════════════════════════════════════════════════════════════════════
-       SUBSCRIPTION
-    ═══════════════════════════════════════════════════════════════════════ */
-
-    async function loadSubscription() {
-      var pill  = document.getElementById('sub-pill');
-      var label = document.getElementById('sub-label');
-      pill.className = 'status-pill';
-      label.textContent = 'Checking…';
-      try {
-        log('out', { type: 'MBB_GET_SUBSCRIPTION_DATA' });
-        var isPaid = await MBBridge.subscription.isSubscribed();
-        log('in', { type: 'MBB_GET_SUBSCRIPTION_DATA_SUCCESS', isSubscribed: isPaid });
-        pill.className  = 'status-pill ' + (isPaid ? 'subscribed' : 'not-subscribed');
-        label.textContent = isPaid ? 'Subscribed' : 'Not subscribed';
-      } catch (err) {
-        log('err', 'isSubscribed() failed: ' + err.message);
-        label.textContent = 'Error';
-      }
+    function prevPage() {
+      if (currentPage > 1) loadVouchers(currentPage - 1);
     }
 
-    /* ═══════════════════════════════════════════════════════════════════════
-       NOTIFICATIONS
-    ═══════════════════════════════════════════════════════════════════════ */
-
-    function notif(type) {
-      var message = document.getElementById('notif-msg').value.trim() || 'Hello from staging test!';
-      if (type === 'success') {
-        MBBridge.notification.showSuccess({ message: message });
-        log('out', { type: 'MBB_SHOW_SUCCESS', payload: { message: message } });
-      } else if (type === 'warning') {
-        MBBridge.notification.showWarning({ message: message });
-        log('out', { type: 'MBB_SHOW_WARNING', payload: { message: message } });
-      } else {
-        MBBridge.notification.showError({ message: message });
-        log('out', { type: 'MBB_SHOW_ERROR', payload: { message: message } });
-      }
-    }
-
-    /* ═══════════════════════════════════════════════════════════════════════
-       NAVIGATION
-    ═══════════════════════════════════════════════════════════════════════ */
-
-    function nav_home() {
-      MBBridge.navigation.navigateHome();
-      log('out', { type: 'MBB_NAVIGATE_HOME' });
-    }
-
-    function nav_back() {
-      var isFallbackToHome = document.getElementById('nav-fallback').checked;
-      MBBridge.navigation.navigateBack({ isFallbackToHome: isFallbackToHome });
-      log('out', { type: 'MBB_NAVIGATE_BACK', payload: { isFallbackToHome: isFallbackToHome } });
-    }
-
-    /* ═══════════════════════════════════════════════════════════════════════
-       PAYWALL
-    ═══════════════════════════════════════════════════════════════════════ */
-
-    function fireEvent(id, label) {
-      var pill = document.getElementById(id);
-      pill.textContent = '✓ ' + label;
-      pill.className = 'event-pill fired';
-      log('in', { event: label });
-      setTimeout(function() {
-        pill.className = 'event-pill';
-        pill.textContent = '⬜ ' + label;
-      }, 3000);
-    }
-
-    function paywall_show() {
-      MBBridge.paywall.showPaywall();
-      log('out', { type: 'MBB_SHOW_PAYWALL' });
+    function nextPage() {
+      var totalPages = Math.ceil(totalCount / perPage);
+      if (currentPage < totalPages) loadVouchers(currentPage + 1);
     }
   </script>
 </body>
