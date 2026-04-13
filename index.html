@@ -1,0 +1,772 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MBB Bridge — Staging Test</title>
+  <script src="https://dszd2mvdaxbkw.cloudfront.net/mbb-bridge/mbb-bridge-sdk.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:         #f1f5f9;
+      --surface:    #ffffff;
+      --border:     #e2e8f0;
+      --text:       #0f172a;
+      --text-muted: #64748b;
+      --header-h:   56px;
+      --log-h:      200px;
+
+      --blue:   #3b82f6;
+      --purple: #8b5cf6;
+      --green:  #22c55e;
+      --amber:  #f59e0b;
+      --red:    #ef4444;
+      --teal:   #14b8a6;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      font-size: 14px;
+      min-height: 100vh;
+    }
+
+    /* ─── Header ──────────────────────────────────────────────────────────── */
+    .header {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      height: var(--header-h);
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      padding: 0 20px;
+      gap: 12px;
+      z-index: 100;
+    }
+
+    .header-title { font-size: 15px; font-weight: 700; }
+    .header-sub   { font-size: 12px; color: var(--text-muted); }
+    .header-spacer { flex: 1; }
+
+    .conn-badge {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      font-weight: 500;
+      padding: 4px 10px;
+      border-radius: 20px;
+      background: #f1f5f9;
+      color: var(--text-muted);
+      transition: all 0.3s;
+    }
+    .conn-badge.connected { background: #dcfce7; color: #166534; }
+    .conn-badge.error     { background: #fee2e2; color: #991b1b; }
+
+    .conn-dot {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      background: currentColor;
+      opacity: 0.7;
+    }
+
+    /* ─── Page ────────────────────────────────────────────────────────────── */
+    .page {
+      margin-top: var(--header-h);
+      padding: 24px 20px;
+      padding-bottom: calc(var(--log-h) + 32px);
+      max-width: 860px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    /* ─── Section ─────────────────────────────────────────────────────────── */
+    .section {
+      margin-bottom: 24px;
+    }
+
+    .section-title {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 10px;
+    }
+
+    /* ─── Hero Grid (User + Company) ──────────────────────────────────────── */
+    .hero-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    @media (max-width: 600px) {
+      .hero-grid { grid-template-columns: 1fr; }
+    }
+
+    /* ─── Card ────────────────────────────────────────────────────────────── */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 18px;
+    }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+
+    .card-icon {
+      width: 36px; height: 36px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      flex-shrink: 0;
+    }
+
+    .card-name  { font-size: 14px; font-weight: 700; }
+    .card-sub   { font-size: 11px; color: var(--text-muted); margin-top: 1px; }
+
+    /* ─── Field rows ──────────────────────────────────────────────────────── */
+    .field-list { display: flex; flex-direction: column; gap: 8px; }
+
+    .field-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+    }
+
+    .field-label {
+      flex-shrink: 0;
+      width: 70px;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      padding-top: 1px;
+    }
+
+    .field-value {
+      font-size: 13px;
+      color: var(--text);
+      word-break: break-all;
+      flex: 1;
+    }
+
+    .field-value.loading {
+      height: 14px;
+      background: var(--bg);
+      border-radius: 4px;
+      animation: shimmer 1.4s ease infinite;
+      width: 80%;
+    }
+
+    .field-value.empty { color: var(--text-muted); font-style: italic; }
+
+    @keyframes shimmer {
+      0%, 100% { opacity: 0.5; }
+      50%       { opacity: 1; }
+    }
+
+    /* ─── Subscription pill ───────────────────────────────────────────────── */
+    .sub-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 12px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 600;
+      background: var(--bg);
+      color: var(--text-muted);
+      border: 1px solid var(--border);
+      transition: all 0.3s;
+    }
+    .status-pill.subscribed     { background: #dcfce7; color: #166534; border-color: #86efac; }
+    .status-pill.not-subscribed { background: #fee2e2; color: #991b1b; border-color: #fca5a5; }
+
+    .status-dot {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      background: currentColor;
+      opacity: 0.7;
+    }
+
+    /* ─── Actions row ─────────────────────────────────────────────────────── */
+    .actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      height: 34px;
+      padding: 0 14px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 500;
+      border: none;
+      cursor: pointer;
+      transition: opacity 0.15s, transform 0.1s;
+      white-space: nowrap;
+    }
+    .btn:hover   { opacity: 0.88; }
+    .btn:active  { transform: scale(0.97); }
+    .btn:disabled{ opacity: 0.45; cursor: not-allowed; transform: none; }
+
+    .btn-blue   { background: var(--blue);   color: white; }
+    .btn-purple { background: var(--purple); color: white; }
+    .btn-green  { background: var(--green);  color: white; }
+    .btn-amber  { background: var(--amber);  color: white; }
+    .btn-red    { background: var(--red);    color: white; }
+    .btn-teal   { background: var(--teal);   color: white; }
+    .btn-ghost  { background: var(--bg); color: var(--text); border: 1px solid var(--border); }
+
+    /* ─── Input ───────────────────────────────────────────────────────────── */
+    .input {
+      flex: 1;
+      min-width: 160px;
+      height: 34px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 0 10px;
+      font-size: 13px;
+      color: var(--text);
+      background: var(--bg);
+      outline: none;
+      transition: border-color 0.15s;
+    }
+    .input:focus { border-color: var(--blue); background: white; }
+
+    .checkbox-row {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      font-size: 13px;
+      color: var(--text-muted);
+      cursor: pointer;
+    }
+    .checkbox-row input { cursor: pointer; accent-color: var(--blue); }
+
+    /* ─── Inline cards row ────────────────────────────────────────────────── */
+    .card-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .card-row .card { flex: 1; min-width: 200px; }
+
+    /* ─── Paywall events ──────────────────────────────────────────────────── */
+    .event-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 12px;
+    }
+
+    .event-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 500;
+      background: var(--bg);
+      color: var(--text-muted);
+      border: 1px solid var(--border);
+      transition: all 0.3s;
+    }
+    .event-pill.fired { background: #fef3c7; color: #92400e; border-color: #fcd34d; }
+
+    /* ─── Log panel ───────────────────────────────────────────────────────── */
+    .log-panel {
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      height: var(--log-h);
+      background: #0f172a;
+      border-top: 1px solid #1e293b;
+      display: flex;
+      flex-direction: column;
+      z-index: 100;
+    }
+
+    .log-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 6px 14px;
+      border-bottom: 1px solid #1e293b;
+      flex-shrink: 0;
+    }
+
+    .log-title {
+      font-size: 11px;
+      font-weight: 600;
+      color: #475569;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .log-clear {
+      font-size: 11px;
+      color: #475569;
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
+    .log-clear:hover { color: #94a3b8; }
+
+    .log-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 8px 14px;
+      font-family: "SF Mono", "Fira Code", monospace;
+      font-size: 11.5px;
+    }
+
+    .log-entry {
+      display: flex;
+      gap: 10px;
+      padding: 2px 0;
+      line-height: 1.6;
+    }
+
+    .log-tag {
+      flex-shrink: 0;
+      font-weight: 600;
+      min-width: 60px;
+    }
+
+    .log-entry.out  .log-tag { color: #60a5fa; }
+    .log-entry.in   .log-tag { color: #4ade80; }
+    .log-entry.info .log-tag { color: #f59e0b; }
+    .log-entry.err  .log-tag { color: #f87171; }
+
+    .log-entry.out  .log-msg { color: #93c5fd; }
+    .log-entry.in   .log-msg { color: #86efac; }
+    .log-entry.info .log-msg { color: #fcd34d; }
+    .log-entry.err  .log-msg { color: #fca5a5; }
+
+    /* ─── Divider ─────────────────────────────────────────────────────────── */
+    .divider { height: 1px; background: var(--border); margin: 4px 0 16px; }
+  </style>
+</head>
+<body>
+
+  <!-- ─── Header ──────────────────────────────────────────────────────────── -->
+  <header class="header">
+    <div>
+      <div class="header-title">MBB Bridge · Staging Test</div>
+      <div class="header-sub">SDK <span id="sdk-version">loading…</span></div>
+    </div>
+    <div class="header-spacer"></div>
+    <div class="conn-badge" id="conn-badge">
+      <div class="conn-dot"></div>
+      <span id="conn-label">Connecting…</span>
+    </div>
+  </header>
+
+  <!-- ─── Page ────────────────────────────────────────────────────────────── -->
+  <div class="page">
+
+    <!-- ── User + Company ──────────────────────────────────────────────── -->
+    <div class="section">
+      <div class="section-title">Identity</div>
+      <div class="hero-grid">
+
+        <!-- User card -->
+        <div class="card">
+          <div class="card-header">
+            <div class="card-icon" style="background:#f5f3ff">👤</div>
+            <div>
+              <div class="card-name">User</div>
+              <div class="card-sub">Logged-in user details</div>
+            </div>
+            <div style="flex:1"></div>
+            <button class="btn btn-ghost" style="font-size:12px;height:28px;padding:0 10px" onclick="loadUser()">↺ Refresh</button>
+          </div>
+          <div class="field-list" id="user-fields">
+            <div class="field-row"><span class="field-label">ID</span><span class="field-value loading"></span></div>
+            <div class="field-row"><span class="field-label">Name</span><span class="field-value loading"></span></div>
+            <div class="field-row"><span class="field-label">Email</span><span class="field-value loading" style="width:90%"></span></div>
+            <div class="field-row"><span class="field-label">Mobile</span><span class="field-value loading" style="width:60%"></span></div>
+            <div class="field-row"><span class="field-label">Role</span><span class="field-value loading" style="width:50%"></span></div>
+          </div>
+        </div>
+
+        <!-- Company card -->
+        <div class="card">
+          <div class="card-header">
+            <div class="card-icon" style="background:#eff6ff">🏢</div>
+            <div>
+              <div class="card-name">Company</div>
+              <div class="card-sub">Selected company details</div>
+            </div>
+            <div style="flex:1"></div>
+            <button class="btn btn-ghost" style="font-size:12px;height:28px;padding:0 10px" onclick="loadCompany()">↺ Refresh</button>
+          </div>
+          <div class="field-list" id="company-fields">
+            <div class="field-row"><span class="field-label">ID</span><span class="field-value loading"></span></div>
+            <div class="field-row"><span class="field-label">Name</span><span class="field-value loading"></span></div>
+            <div class="field-row"><span class="field-label">GSTIN</span><span class="field-value loading" style="width:65%"></span></div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ── Subscription ─────────────────────────────────────────────────── -->
+    <div class="section">
+      <div class="section-title">Subscription</div>
+      <div class="card">
+        <div class="sub-row">
+          <div class="status-pill" id="sub-pill">
+            <div class="status-dot"></div>
+            <span id="sub-label">Checking…</span>
+          </div>
+          <button class="btn btn-green" onclick="loadSubscription()">Check Subscription</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Notifications ────────────────────────────────────────────────── -->
+    <div class="section">
+      <div class="section-title">Notifications</div>
+      <div class="card">
+        <div class="actions">
+          <input class="input" id="notif-msg" value="Hello from staging test!" placeholder="Toast message…" />
+          <button class="btn btn-green"  onclick="notif('success')">✓ Success</button>
+          <button class="btn btn-amber"  onclick="notif('warning')">⚠ Warning</button>
+          <button class="btn btn-red"    onclick="notif('error')">✕ Error</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Navigation ───────────────────────────────────────────────────── -->
+    <div class="section">
+      <div class="section-title">Navigation</div>
+      <div class="card-row">
+        <div class="card">
+          <div style="font-size:12px;font-weight:600;color:var(--text-muted);margin-bottom:10px">navigateHome()</div>
+          <button class="btn btn-teal" onclick="nav_home()">Navigate Home</button>
+        </div>
+        <div class="card">
+          <div style="font-size:12px;font-weight:600;color:var(--text-muted);margin-bottom:10px">navigateBack()</div>
+          <div class="actions">
+            <label class="checkbox-row">
+              <input type="checkbox" id="nav-fallback" />
+              isFallbackToHome
+            </label>
+            <button class="btn btn-teal" onclick="nav_back()">Navigate Back</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Paywall ───────────────────────────────────────────────────────── -->
+    <div class="section">
+      <div class="section-title">Paywall</div>
+      <div class="card">
+        <div class="actions">
+          <button class="btn btn-amber" onclick="paywall_show()">Show Paywall</button>
+        </div>
+        <div class="event-list">
+          <div class="event-pill" id="evt-paywall-open">⬜ onPaywallOpen</div>
+          <div class="event-pill" id="evt-paywall-closed">⬜ onPaywallClosed</div>
+          <div class="event-pill" id="evt-payment-init">⬜ onPaymentInit</div>
+          <div class="event-pill" id="evt-payment-success">⬜ onPaymentSuccess</div>
+          <div class="event-pill" id="evt-payment-failed">⬜ onPaymentFailed</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ─── Log Panel ────────────────────────────────────────────────────────── -->
+  <div class="log-panel">
+    <div class="log-header">
+      <span class="log-title">Message Log</span>
+      <button class="log-clear" onclick="clearLog()">Clear</button>
+    </div>
+    <div class="log-body" id="log-body">
+      <div class="log-entry info">
+        <span class="log-tag">info</span>
+        <span class="log-msg">Initialising MBBridge…</span>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    /* ═══════════════════════════════════════════════════════════════════════
+       LOG UTILITIES
+    ═══════════════════════════════════════════════════════════════════════ */
+
+    function log(direction, message) {
+      var body = document.getElementById('log-body');
+      var entry = document.createElement('div');
+      entry.className = 'log-entry ' + direction;
+
+      var tag = document.createElement('span');
+      tag.className = 'log-tag';
+      tag.textContent = direction === 'out' ? '→ shell'
+                      : direction === 'in'  ? '← shell'
+                      : direction === 'err' ? '✕ error'
+                      : 'ℹ info';
+
+      var msg = document.createElement('span');
+      msg.className = 'log-msg';
+      msg.textContent = typeof message === 'string' ? message : JSON.stringify(message);
+
+      entry.appendChild(tag);
+      entry.appendChild(msg);
+      body.appendChild(entry);
+      body.scrollTop = body.scrollHeight;
+    }
+
+    function clearLog() {
+      document.getElementById('log-body').innerHTML = '';
+    }
+
+    /* ═══════════════════════════════════════════════════════════════════════
+       RENDER HELPERS
+    ═══════════════════════════════════════════════════════════════════════ */
+
+    function renderFields(containerId, fields) {
+      var container = document.getElementById(containerId);
+      container.innerHTML = '';
+      fields.forEach(function(f) {
+        var row = document.createElement('div');
+        row.className = 'field-row';
+
+        var label = document.createElement('span');
+        label.className = 'field-label';
+        label.textContent = f.label;
+
+        var value = document.createElement('span');
+        if (f.error) {
+          value.className = 'field-value empty';
+          value.textContent = '— error loading';
+        } else if (f.value == null || f.value === '' || f.value === undefined) {
+          value.className = 'field-value empty';
+          value.textContent = '—';
+        } else {
+          value.className = 'field-value';
+          value.textContent = f.value;
+        }
+
+        row.appendChild(label);
+        row.appendChild(value);
+        container.appendChild(row);
+      });
+    }
+
+    function setLoadingFields(containerId, fieldLabels) {
+      var container = document.getElementById(containerId);
+      container.innerHTML = '';
+      fieldLabels.forEach(function(label) {
+        var row = document.createElement('div');
+        row.className = 'field-row';
+
+        var l = document.createElement('span');
+        l.className = 'field-label';
+        l.textContent = label;
+
+        var v = document.createElement('span');
+        v.className = 'field-value loading';
+
+        row.appendChild(l);
+        row.appendChild(v);
+        container.appendChild(row);
+      });
+    }
+
+    /* ═══════════════════════════════════════════════════════════════════════
+       INIT
+    ═══════════════════════════════════════════════════════════════════════ */
+
+    MBBridge.on({ type: 'MBB_SHELL_ACK', callback: function(msg) {
+      var badge = document.getElementById('conn-badge');
+      badge.className = 'conn-badge connected';
+      document.getElementById('conn-label').textContent = 'Connected';
+      log('in', msg);
+      log('info', 'Bridge connected to shell ✓');
+    }});
+
+    // Register paywall listeners before init so no events are missed
+    MBBridge.paywall.onPaywallOpen(function() {
+      fireEvent('evt-paywall-open', 'onPaywallOpen');
+    });
+    MBBridge.paywall.onPaywallClosed(function() {
+      fireEvent('evt-paywall-closed', 'onPaywallClosed');
+    });
+    MBBridge.paywall.onPaymentInit(function() {
+      fireEvent('evt-payment-init', 'onPaymentInit');
+    });
+    MBBridge.paywall.onPaymentSuccess(function() {
+      fireEvent('evt-payment-success', 'onPaymentSuccess');
+      log('info', 'Payment successful — feature unlocked ✓');
+    });
+    MBBridge.paywall.onPaymentFailed(function() {
+      fireEvent('evt-payment-failed', 'onPaymentFailed');
+      log('info', 'Payment failed');
+    });
+
+    MBBridge.init({ appId: 'staging-test-app', isDebug: true });
+    document.getElementById('sdk-version').textContent = 'v' + MBBridge.version;
+    log('info', 'init() → appId: staging-test-app');
+
+    // Auto-load everything on mount
+    Promise.all([loadUser(), loadCompany(), loadSubscription()]);
+
+    /* ═══════════════════════════════════════════════════════════════════════
+       USER
+    ═══════════════════════════════════════════════════════════════════════ */
+
+    async function loadUser() {
+      setLoadingFields('user-fields', ['ID', 'Name', 'Email', 'Mobile', 'Role']);
+      try {
+        log('out', { type: 'MBB_GET_USER_DATA' });
+        var user = await MBBridge.user.getUser();
+        log('in', { type: 'MBB_GET_USER_DATA_SUCCESS', user: user });
+        renderFields('user-fields', [
+          { label: 'ID',     value: user.id },
+          { label: 'Name',   value: user.name },
+          { label: 'Email',  value: user.email },
+          { label: 'Mobile', value: user.mobile },
+          { label: 'Role',   value: user.role },
+        ]);
+      } catch (err) {
+        log('err', 'getUser() failed: ' + err.message);
+        renderFields('user-fields', [
+          { label: 'ID',     error: true },
+          { label: 'Name',   error: true },
+          { label: 'Email',  error: true },
+          { label: 'Mobile', error: true },
+          { label: 'Role',   error: true },
+        ]);
+        MBBridge.notification.showError({ message: 'Failed to load user.' });
+      }
+    }
+
+    /* ═══════════════════════════════════════════════════════════════════════
+       COMPANY
+    ═══════════════════════════════════════════════════════════════════════ */
+
+    async function loadCompany() {
+      setLoadingFields('company-fields', ['ID', 'Name', 'GSTIN']);
+      try {
+        log('out', { type: 'MBB_SELECTED_COMPANY_DATA' });
+        var company = await MBBridge.company.getSelectedCompany();
+        log('in', { type: 'MBB_SELECTED_COMPANY_DATA_SUCCESS', company: company });
+        renderFields('company-fields', [
+          { label: 'ID',    value: company.id },
+          { label: 'Name',  value: company.name },
+          { label: 'GSTIN', value: company.gstin },
+        ]);
+      } catch (err) {
+        log('err', 'getSelectedCompany() failed: ' + err.message);
+        renderFields('company-fields', [
+          { label: 'ID',    error: true },
+          { label: 'Name',  error: true },
+          { label: 'GSTIN', error: true },
+        ]);
+        MBBridge.notification.showError({ message: 'Failed to load company.' });
+      }
+    }
+
+    /* ═══════════════════════════════════════════════════════════════════════
+       SUBSCRIPTION
+    ═══════════════════════════════════════════════════════════════════════ */
+
+    async function loadSubscription() {
+      var pill  = document.getElementById('sub-pill');
+      var label = document.getElementById('sub-label');
+      pill.className = 'status-pill';
+      label.textContent = 'Checking…';
+      try {
+        log('out', { type: 'MBB_GET_SUBSCRIPTION_DATA' });
+        var isPaid = await MBBridge.subscription.isSubscribed();
+        log('in', { type: 'MBB_GET_SUBSCRIPTION_DATA_SUCCESS', isSubscribed: isPaid });
+        pill.className  = 'status-pill ' + (isPaid ? 'subscribed' : 'not-subscribed');
+        label.textContent = isPaid ? 'Subscribed' : 'Not subscribed';
+      } catch (err) {
+        log('err', 'isSubscribed() failed: ' + err.message);
+        label.textContent = 'Error';
+      }
+    }
+
+    /* ═══════════════════════════════════════════════════════════════════════
+       NOTIFICATIONS
+    ═══════════════════════════════════════════════════════════════════════ */
+
+    function notif(type) {
+      var message = document.getElementById('notif-msg').value.trim() || 'Hello from staging test!';
+      if (type === 'success') {
+        MBBridge.notification.showSuccess({ message: message });
+        log('out', { type: 'MBB_SHOW_SUCCESS', payload: { message: message } });
+      } else if (type === 'warning') {
+        MBBridge.notification.showWarning({ message: message });
+        log('out', { type: 'MBB_SHOW_WARNING', payload: { message: message } });
+      } else {
+        MBBridge.notification.showError({ message: message });
+        log('out', { type: 'MBB_SHOW_ERROR', payload: { message: message } });
+      }
+    }
+
+    /* ═══════════════════════════════════════════════════════════════════════
+       NAVIGATION
+    ═══════════════════════════════════════════════════════════════════════ */
+
+    function nav_home() {
+      MBBridge.navigation.navigateHome();
+      log('out', { type: 'MBB_NAVIGATE_HOME' });
+    }
+
+    function nav_back() {
+      var isFallbackToHome = document.getElementById('nav-fallback').checked;
+      MBBridge.navigation.navigateBack({ isFallbackToHome: isFallbackToHome });
+      log('out', { type: 'MBB_NAVIGATE_BACK', payload: { isFallbackToHome: isFallbackToHome } });
+    }
+
+    /* ═══════════════════════════════════════════════════════════════════════
+       PAYWALL
+    ═══════════════════════════════════════════════════════════════════════ */
+
+    function fireEvent(id, label) {
+      var pill = document.getElementById(id);
+      pill.textContent = '✓ ' + label;
+      pill.className = 'event-pill fired';
+      log('in', { event: label });
+      setTimeout(function() {
+        pill.className = 'event-pill';
+        pill.textContent = '⬜ ' + label;
+      }, 3000);
+    }
+
+    function paywall_show() {
+      MBBridge.paywall.showPaywall();
+      log('out', { type: 'MBB_SHOW_PAYWALL' });
+    }
+  </script>
+</body>
+</html>
