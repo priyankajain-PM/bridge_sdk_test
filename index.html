@@ -614,14 +614,16 @@
       document.getElementById('fetch-btn').disabled = true;
 
       var params = new URLSearchParams({
-        invoice_type: 'sales_invoice',
+        voucher_type: 'sales_invoice',
+        status:       'final',
         page:         String(currentPage),
         per_page:     String(perPage),
-        sort_by:      'date',
+        sort_by:      'voucher_date',
         sort_order:   'desc',
+        filter:       'true',
       });
 
-      var url = 'https://niobooks.in/api/web/invoices?' + params.toString();
+      var url = 'https://niobooks.in/api/web/vouchers?' + params.toString();
 
       log('out', 'GET ' + url);
 
@@ -673,7 +675,7 @@
       var html = '';
       for (var i = 0; i < vouchers.length; i++) {
         var v = vouchers[i];
-        var party = v.contact_name || (v.contact_id ? v.contact_id.slice(0, 8) + '…' : '—');
+        var party = v.contact_name || '—';
         html += '<tr>'
           + '<td class="td-date">' + formatDate(v.date) + '</td>'
           + '<td class="td-inv">'  + (v.serial_number || '—') + '</td>'
