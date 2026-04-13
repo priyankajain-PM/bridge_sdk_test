@@ -403,11 +403,12 @@
 
     <!-- Auth card -->
     <div class="card">
-      <div class="card-label">Auth — Bearer Token</div>
+      <div class="card-label">Auth</div>
       <div class="auth-row">
-        <input class="input" id="token-input" type="password" placeholder="Paste your Bearer token here…" />
-        <button class="btn btn-ghost" onclick="setToken()">Set Token</button>
-        <div class="token-badge" id="token-badge">✓ Token set</div>
+        <input class="input" id="token-input" type="password" placeholder="Bearer token…" />
+        <input class="input" id="company-input" style="max-width:200px" placeholder="Company ID (auto from bridge)" />
+        <button class="btn btn-ghost" onclick="setToken()">Set</button>
+        <div class="token-badge" id="token-badge">✓ Ready</div>
       </div>
     </div>
 
@@ -511,17 +512,19 @@
 
     MBBridge.init({ appId: 'staging-test-app', isDebug: true });
 
-    // Load company + user for header
+    // Load company + user for header; auto-fill company ID input
     MBBridge.company.getSelectedCompany().then(function(company) {
       var el = document.getElementById('header-company');
       el.className = 'header-company';
       el.textContent = company.name || '—';
       companyId = company.id || '';
+      document.getElementById('company-input').value = companyId;
       log('info', 'Company: ' + company.name + ' (id: ' + companyId + ')');
-    }).catch(function(err) {
+    }).catch(function() {
       var el = document.getElementById('header-company');
       el.className = 'header-company';
       el.textContent = 'No company';
+      log('info', 'Bridge: no company — enter Company ID manually');
     });
 
     MBBridge.user.getUser().then(function(user) {
@@ -538,13 +541,14 @@
     function setToken() {
       var val = document.getElementById('token-input').value.trim();
       if (!val) return;
-      // Strip leading "Bearer " if pasted with prefix
       authToken = val.replace(/^Bearer\s+/i, '');
+      // Allow manual company ID override
+      var manualCompany = document.getElementById('company-input').value.trim();
+      if (manualCompany) companyId = manualCompany;
       document.getElementById('token-badge').className = 'token-badge visible';
-      log('info', 'Bearer token set ✓');
+      log('info', 'Token set ✓  company-id: ' + (companyId || '(empty)'));
     }
 
-    // Also allow Enter key in token input
     document.getElementById('token-input').addEventListener('keydown', function(e) {
       if (e.key === 'Enter') setToken();
     });
@@ -610,15 +614,14 @@
       document.getElementById('fetch-btn').disabled = true;
 
       var params = new URLSearchParams({
-        voucher_type: 'sales_invoice',
-        status:       'final',
-        page:         String(currentPage),
-        per_page:     String(perPage),
-        sort_by:      'date',
-        sort_order:   'desc',
+        status:     'final',
+        page:       String(currentPage),
+        per_page:   String(perPage),
+        sort_by:    'date',
+        sort_order: 'desc',
       });
 
-      var url = 'https://niobooks.in/api/web/vouchers?' + params.toString();
+      var url = 'https://niobooks.in/api/web/invoices?' + params.toString();
 
       log('out', 'GET ' + url);
 
