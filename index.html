@@ -1,0 +1,1083 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sales Vouchers</title>
+
+  <script src="https://sdk.niobooks.in/mbb-bridge/mbb-bridge-sdk.js"></script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:         #f1f5f9;
+      --surface:    #ffffff;
+      --border:     #e2e8f0;
+      --text:       #0f172a;
+      --text-muted: #64748b;
+      --header-h:   52px;
+      --blue:       #3b82f6;
+      --green:      #22c55e;
+      --amber:      #f59e0b;
+      --red:        #ef4444;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      font-size: 14px;
+    }
+
+    /* ─── Header ──────────────────────────────────────────────────────────── */
+    .header {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      height: var(--header-h);
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      padding: 0 16px;
+      gap: 12px;
+      z-index: 100;
+    }
+
+    .btn-back {
+      width: 32px; height: 32px;
+      border: none;
+      background: var(--bg);
+      border-radius: 8px;
+      cursor: pointer;
+      color: var(--text);
+      font-size: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      transition: background 0.15s;
+    }
+    .btn-back:hover { background: var(--border); }
+
+    .header-title {
+      font-size: 15px;
+      font-weight: 700;
+      flex: 1;
+    }
+
+    .header-company {
+      font-size: 12px;
+      color: var(--text-muted);
+      max-width: 160px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .avatar {
+      width: 28px; height: 28px;
+      border-radius: 50%;
+      background: var(--blue);
+      color: white;
+      font-size: 11px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    /* ─── Page ────────────────────────────────────────────────────────────── */
+    .page {
+      margin-top: var(--header-h);
+      padding: 16px;
+      padding-bottom: 80px;
+      max-width: 1080px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    /* ─── Filter bar ──────────────────────────────────────────────────────── */
+    .filter-bar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 14px;
+      flex-wrap: wrap;
+    }
+
+    .search-input {
+      flex: 1;
+      min-width: 180px;
+      height: 34px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 0 10px;
+      font-size: 13px;
+      color: var(--text);
+      background: var(--surface);
+      outline: none;
+      transition: border-color 0.15s;
+    }
+    .search-input:focus { border-color: var(--blue); }
+
+    .filter-tabs { display: flex; gap: 4px; }
+
+    .tab {
+      height: 34px;
+      padding: 0 14px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      background: var(--surface);
+      color: var(--text-muted);
+      transition: all 0.15s;
+    }
+    .tab:hover { background: var(--bg); }
+    .tab.active { background: var(--blue); color: white; border-color: var(--blue); }
+
+    /* ─── Manage Staff button ─────────────────────────────────────────────── */
+    .btn-staff {
+      height: 34px;
+      padding: 0 14px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      background: var(--surface);
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      transition: background 0.15s;
+      white-space: nowrap;
+    }
+    .btn-staff:hover { background: var(--bg); }
+
+    /* ─── Card ────────────────────────────────────────────────────────────── */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+
+    /* ─── Table ───────────────────────────────────────────────────────────── */
+    .table-wrap { overflow-x: auto; }
+
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+
+    thead th {
+      background: var(--bg);
+      padding: 10px 14px;
+      text-align: left;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      border-bottom: 1px solid var(--border);
+      white-space: nowrap;
+    }
+    thead th:first-child { width: 44px; text-align: center; padding: 10px 0; }
+
+    tbody td {
+      padding: 11px 14px;
+      border-bottom: 1px solid var(--border);
+      vertical-align: middle;
+    }
+    tbody tr:last-child td { border-bottom: none; }
+    tbody tr:hover td      { background: #f8fafc; }
+    tbody tr.selected td   { background: #eff6ff; }
+
+    tbody td:first-child { text-align: center; padding: 11px 0; }
+
+    .td-date   { white-space: nowrap; color: var(--text-muted); font-size: 12px; }
+    .td-inv    { font-weight: 600; color: var(--blue); }
+    .td-party  { max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .td-amount { font-weight: 600; text-align: right; white-space: nowrap; }
+    .td-assign { min-width: 150px; }
+
+    /* ─── Assign select ───────────────────────────────────────────────────── */
+    .assign-select {
+      width: 100%;
+      height: 30px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 0 6px;
+      font-size: 12px;
+      font-family: inherit;
+      color: var(--text);
+      background: var(--surface);
+      cursor: pointer;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+    .assign-select:focus { border-color: var(--blue); }
+    .assign-select.assigned { border-color: #86efac; background: #f0fdf4; color: #166534; }
+
+    /* ─── Checkbox ────────────────────────────────────────────────────────── */
+    .cb { width: 15px; height: 15px; cursor: pointer; accent-color: var(--blue); }
+
+    /* ─── Status pills ────────────────────────────────────────────────────── */
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      padding: 2px 8px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+    .pill-paid      { background: #dcfce7; color: #166534; }
+    .pill-unpaid    { background: #fee2e2; color: #991b1b; }
+    .pill-partial   { background: #fef3c7; color: #92400e; }
+    .pill-overdue   { background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; }
+    .pill-cancelled { background: #f1f5f9; color: #64748b; }
+
+    /* ─── Skeleton ────────────────────────────────────────────────────────── */
+    .skel {
+      display: inline-block;
+      height: 12px;
+      border-radius: 4px;
+      background: var(--bg);
+      animation: shimmer 1.4s ease infinite;
+    }
+    @keyframes shimmer {
+      0%, 100% { opacity: 0.45; }
+      50%       { opacity: 1; }
+    }
+
+    /* ─── State rows ──────────────────────────────────────────────────────── */
+    .state-row td {
+      padding: 48px 14px;
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 13px;
+    }
+    .state-row.err td { color: #991b1b; }
+
+    /* ─── Table footer (pagination) ───────────────────────────────────────── */
+    .table-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 14px;
+      border-top: 1px solid var(--border);
+      background: var(--bg);
+    }
+
+    .page-info { font-size: 12px; color: var(--text-muted); }
+
+    .page-nav { display: flex; gap: 8px; }
+
+    .btn-page {
+      height: 30px;
+      padding: 0 12px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      background: var(--surface);
+      color: var(--text);
+      transition: background 0.15s;
+    }
+    .btn-page:hover:not(:disabled) { background: var(--bg); }
+    .btn-page:disabled { opacity: 0.38; cursor: not-allowed; }
+
+    /* ─── Selection bar ───────────────────────────────────────────────────── */
+    .sel-bar {
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      height: 60px;
+      background: #1e293b;
+      border-top: 1px solid #334155;
+      display: flex;
+      align-items: center;
+      padding: 0 20px;
+      gap: 12px;
+      z-index: 200;
+      transform: translateY(100%);
+      transition: transform 0.2s ease;
+    }
+    .sel-bar.visible { transform: translateY(0); }
+
+    .sel-count { font-size: 13px; font-weight: 600; color: #f1f5f9; white-space: nowrap; }
+    .sel-total { font-size: 12px; color: #94a3b8; white-space: nowrap; }
+    .sel-spacer { flex: 1; }
+
+    /* Bulk assign section in selection bar */
+    .sel-assign-wrap {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .sel-assign-label {
+      font-size: 12px;
+      color: #94a3b8;
+      white-space: nowrap;
+    }
+    .sel-assign-select {
+      height: 34px;
+      padding: 0 8px;
+      border: 1px solid #475569;
+      border-radius: 8px;
+      font-size: 12px;
+      font-family: inherit;
+      background: #334155;
+      color: #f1f5f9;
+      cursor: pointer;
+      outline: none;
+      min-width: 140px;
+      transition: border-color 0.15s;
+    }
+    .sel-assign-select:focus { border-color: var(--blue); }
+
+    .btn-assign {
+      height: 34px;
+      padding: 0 16px;
+      border: none;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      background: var(--blue);
+      color: white;
+      transition: opacity 0.15s;
+      white-space: nowrap;
+    }
+    .btn-assign:hover:not(:disabled) { opacity: 0.85; }
+    .btn-assign:disabled { opacity: 0.38; cursor: not-allowed; }
+
+    .btn-clear {
+      height: 34px;
+      padding: 0 14px;
+      border: 1px solid #475569;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      background: transparent;
+      color: #94a3b8;
+      transition: all 0.15s;
+      white-space: nowrap;
+    }
+    .btn-clear:hover { border-color: #94a3b8; color: #f1f5f9; }
+
+    /* ─── Staff Modal ─────────────────────────────────────────────────────── */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.4);
+      z-index: 300;
+      align-items: center;
+      justify-content: center;
+    }
+    .modal-overlay.open { display: flex; }
+
+    .modal {
+      background: var(--surface);
+      border-radius: 14px;
+      width: 90%;
+      max-width: 440px;
+      max-height: 80vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+    }
+
+    .modal-header {
+      display: flex;
+      align-items: center;
+      padding: 16px 18px;
+      border-bottom: 1px solid var(--border);
+      gap: 10px;
+    }
+    .modal-title { font-size: 14px; font-weight: 700; flex: 1; }
+    .modal-close {
+      width: 28px; height: 28px;
+      border: none;
+      background: var(--bg);
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-muted);
+    }
+    .modal-close:hover { background: var(--border); }
+
+    .modal-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px 18px;
+    }
+
+    .staff-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 14px; }
+
+    .staff-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--bg);
+    }
+    .staff-item-avatar {
+      width: 30px; height: 30px;
+      border-radius: 50%;
+      background: #dbeafe;
+      color: #1d4ed8;
+      font-size: 11px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .staff-item-name { flex: 1; font-size: 13px; font-weight: 500; }
+    .staff-item-role { font-size: 11px; color: var(--text-muted); }
+    .btn-remove-staff {
+      border: none;
+      background: none;
+      cursor: pointer;
+      color: var(--text-muted);
+      font-size: 16px;
+      padding: 2px 6px;
+      border-radius: 4px;
+      transition: color 0.15s, background 0.15s;
+    }
+    .btn-remove-staff:hover { color: var(--red); background: #fee2e2; }
+
+    .add-staff-row {
+      display: flex;
+      gap: 8px;
+    }
+    .add-staff-input {
+      flex: 1;
+      height: 34px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 0 10px;
+      font-size: 13px;
+      color: var(--text);
+      background: var(--surface);
+      outline: none;
+      transition: border-color 0.15s;
+    }
+    .add-staff-input:focus { border-color: var(--blue); }
+    .btn-add-staff {
+      height: 34px;
+      padding: 0 14px;
+      border: none;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      background: var(--blue);
+      color: white;
+    }
+    .btn-add-staff:hover { opacity: 0.85; }
+  </style>
+</head>
+<body>
+
+  <!-- ─── Header ──────────────────────────────────────────────────────────── -->
+  <header class="header">
+    <button class="btn-back" onclick="goBack()" title="Back">&#8592;</button>
+    <div class="header-title">Sales Vouchers</div>
+    <div class="header-company" id="header-company">Loading…</div>
+    <div class="avatar" id="user-avatar">?</div>
+  </header>
+
+  <!-- ─── Page ────────────────────────────────────────────────────────────── -->
+  <div class="page">
+
+    <div class="filter-bar">
+      <input
+        class="search-input"
+        id="search-input"
+        type="text"
+        placeholder="Search invoice, party…"
+        oninput="onSearch()"
+      />
+      <div class="filter-tabs">
+        <button class="tab active" onclick="setFilter('all', this)">All</button>
+        <button class="tab" onclick="setFilter('unpaid', this)">Unpaid</button>
+        <button class="tab" onclick="setFilter('overdue', this)">Overdue</button>
+      </div>
+      <button class="btn-staff" onclick="openStaffModal()">
+        &#128100; Manage Staff
+      </button>
+    </div>
+
+    <div class="card">
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th><input type="checkbox" class="cb" id="select-all" onclick="toggleSelectAll()" /></th>
+              <th>Date</th>
+              <th>Invoice #</th>
+              <th>Party</th>
+              <th style="text-align:right">Amount</th>
+              <th>Status</th>
+              <th>Assigned To</th>
+            </tr>
+          </thead>
+          <tbody id="voucher-tbody"></tbody>
+        </table>
+      </div>
+
+      <div class="table-footer">
+        <span class="page-info" id="page-info">—</span>
+        <div class="page-nav">
+          <button class="btn-page" id="prev-btn" onclick="prevPage()" disabled>← Prev</button>
+          <button class="btn-page" id="next-btn" onclick="nextPage()" disabled>Next →</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ─── Selection bar ────────────────────────────────────────────────────── -->
+  <div class="sel-bar" id="sel-bar">
+    <span class="sel-count" id="sel-count"></span>
+    <span class="sel-total" id="sel-total"></span>
+    <div class="sel-spacer"></div>
+    <div class="sel-assign-wrap">
+      <span class="sel-assign-label">Assign to:</span>
+      <select class="sel-assign-select" id="bulk-assign-select">
+        <option value="">— Select staff —</option>
+      </select>
+      <button class="btn-assign" id="bulk-assign-btn" onclick="bulkAssign()" disabled>Assign</button>
+    </div>
+    <button class="btn-clear" onclick="clearSelection()">Clear</button>
+  </div>
+
+  <!-- ─── Staff Modal ───────────────────────────────────────────────────────── -->
+  <div class="modal-overlay" id="staff-modal" onclick="onModalOverlayClick(event)">
+    <div class="modal">
+      <div class="modal-header">
+        <span class="modal-title">Manage Staff</span>
+        <button class="modal-close" onclick="closeStaffModal()">&#10005;</button>
+      </div>
+      <div class="modal-body">
+        <div class="staff-list" id="staff-list"></div>
+        <div class="add-staff-row">
+          <input
+            class="add-staff-input"
+            id="new-staff-input"
+            type="text"
+            placeholder="Enter staff name…"
+            onkeydown="if(event.key==='Enter') addStaff()"
+          />
+          <button class="btn-add-staff" onclick="addStaff()">Add</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    /* ══════════════════════════════════════════════════════════════════════
+       STATE
+    ══════════════════════════════════════════════════════════════════════ */
+    var currentPage   = 1;
+    var PAGE_SIZE     = 25;
+    var isLastPage    = false;
+    var currentFilter = 'all';
+    var searchTimer   = null;
+    var selectedIds   = new Set();
+    var voucherMap    = {};
+
+    /* Staff list — persisted in localStorage */
+    var STAFF_KEY       = 'sales_vouchers_staff';
+    var ASSIGNMENTS_KEY = 'sales_vouchers_assignments';
+
+    function loadStaff() {
+      try { return JSON.parse(localStorage.getItem(STAFF_KEY) || '[]'); } catch(_) { return []; }
+    }
+    function saveStaff(list) {
+      localStorage.setItem(STAFF_KEY, JSON.stringify(list));
+    }
+
+    /* assignments: { [voucherId]: staffName } */
+    function loadAssignments() {
+      try { return JSON.parse(localStorage.getItem(ASSIGNMENTS_KEY) || '{}'); } catch(_) { return {}; }
+    }
+    function saveAssignments(map) {
+      localStorage.setItem(ASSIGNMENTS_KEY, JSON.stringify(map));
+    }
+
+    var staffList   = loadStaff();
+    var assignments = loadAssignments();
+
+    /* Seed with demo staff if none exist */
+    if (staffList.length === 0) {
+      staffList = ['Amit Sharma', 'Priya Singh', 'Rahul Verma'];
+      saveStaff(staffList);
+    }
+
+    /* ══════════════════════════════════════════════════════════════════════
+       BRIDGE INIT
+    ══════════════════════════════════════════════════════════════════════ */
+    MBBridge.init({ appId: 'sales-vouchers-app' });
+
+    /* ══════════════════════════════════════════════════════════════════════
+       MOUNT
+    ══════════════════════════════════════════════════════════════════════ */
+    async function onMount() {
+      try {
+        var results = await Promise.all([
+          MBBridge.user.getUser(),
+          MBBridge.company.getSelectedCompany(),
+        ]);
+        var user    = results[0];
+        var company = results[1];
+
+        document.getElementById('header-company').textContent = company.name || '—';
+
+        var name     = user.name || user.email || '?';
+        var initials = name.split(' ').map(function(w) { return w[0]; }).slice(0, 2).join('').toUpperCase();
+        document.getElementById('user-avatar').textContent = initials || '?';
+      } catch (_) {
+        document.getElementById('header-company').textContent = '—';
+      }
+
+      await loadVouchers(1);
+      MBBridge.events.logProductEvent({ eventName: 'sales_vouchers_viewed' });
+    }
+
+    /* ══════════════════════════════════════════════════════════════════════
+       VOUCHER FETCH
+    ══════════════════════════════════════════════════════════════════════ */
+    function buildFilters() {
+      var f = {
+        voucher_type: 'sales_invoice',
+        status:       'final',
+        sort_by:      'date',
+        sort_order:   'desc',
+      };
+      if (currentFilter === 'unpaid')  f.is_paid = false;
+      if (currentFilter === 'overdue') f.overdue = true;
+
+      var term = document.getElementById('search-input').value.trim();
+      if (term) f.search_term = term;
+
+      return f;
+    }
+
+    async function loadVouchers(page) {
+      currentPage = page;
+      selectedIds.clear();
+      updateSelectionBar();
+      showSkeleton();
+      setPaginationEnabled(false);
+
+      try {
+        var result   = await MBBridge.vouchers.getPaginatedVouchers({
+          page:     currentPage,
+          pageSize: PAGE_SIZE,
+          filters:  buildFilters(),
+        });
+        var vouchers = result.vouchers || [];
+
+        isLastPage = vouchers.length < PAGE_SIZE;
+
+        voucherMap = {};
+        for (var i = 0; i < vouchers.length; i++) {
+          voucherMap[vouchers[i].id] = vouchers[i];
+        }
+
+        if (vouchers.length === 0) {
+          showEmpty();
+        } else {
+          renderRows(vouchers);
+        }
+
+        document.getElementById('page-info').textContent = 'Page ' + currentPage;
+        setPaginationEnabled(true);
+
+      } catch (err) {
+        showError(err.message);
+        MBBridge.notification.showError({ message: 'Failed to load vouchers.' });
+      }
+    }
+
+    /* ══════════════════════════════════════════════════════════════════════
+       RENDER
+    ══════════════════════════════════════════════════════════════════════ */
+    function buildStaffOptions(selectedName) {
+      var opts = '<option value="">— Unassigned —</option>';
+      for (var i = 0; i < staffList.length; i++) {
+        var name = staffList[i];
+        var sel  = (name === selectedName) ? ' selected' : '';
+        opts += '<option value="' + esc(name) + '"' + sel + '>' + esc(name) + '</option>';
+      }
+      return opts;
+    }
+
+    function renderRows(vouchers) {
+      var html = '';
+      for (var i = 0; i < vouchers.length; i++) {
+        var v          = vouchers[i];
+        var isChk      = selectedIds.has(v.id) ? 'checked' : '';
+        var selCls     = selectedIds.has(v.id) ? ' selected' : '';
+        var assignedTo = assignments[v.id] || '';
+        var assignCls  = assignedTo ? ' assigned' : '';
+
+        html +=
+          '<tr class="voucher-row' + selCls + '" data-id="' + esc(v.id) + '">' +
+            '<td><input type="checkbox" class="cb row-cb" ' + isChk +
+              ' onchange="toggleRow(this, \'' + esc(v.id) + '\')" /></td>' +
+            '<td class="td-date">'   + fmtDate(v.date)               + '</td>' +
+            '<td class="td-inv">'    + esc(v.serial_number || '—')   + '</td>' +
+            '<td class="td-party">'  + esc(v.contact_name  || '—')   + '</td>' +
+            '<td class="td-amount">' + fmtAmount(v.amount)            + '</td>' +
+            '<td>'                   + statusPill(v)                   + '</td>' +
+            '<td class="td-assign">' +
+              '<select class="assign-select' + assignCls + '"' +
+                ' data-id="' + esc(v.id) + '"' +
+                ' onchange="onAssignChange(this)">' +
+                buildStaffOptions(assignedTo) +
+              '</select>' +
+            '</td>' +
+          '</tr>';
+      }
+      document.getElementById('voucher-tbody').innerHTML = html;
+      syncSelectAll();
+    }
+
+    function showSkeleton() {
+      var rows = '';
+      for (var i = 0; i < 8; i++) {
+        rows +=
+          '<tr>' +
+            '<td><span class="skel" style="width:15px;height:15px;border-radius:3px"></span></td>' +
+            '<td class="td-date"><span class="skel" style="width:72px"></span></td>' +
+            '<td><span class="skel" style="width:68px"></span></td>' +
+            '<td><span class="skel" style="width:' + (90 + i * 11) + 'px"></span></td>' +
+            '<td style="text-align:right"><span class="skel" style="width:62px"></span></td>' +
+            '<td><span class="skel" style="width:50px"></span></td>' +
+            '<td><span class="skel" style="width:110px"></span></td>' +
+          '</tr>';
+      }
+      document.getElementById('voucher-tbody').innerHTML = rows;
+    }
+
+    function showEmpty() {
+      document.getElementById('voucher-tbody').innerHTML =
+        '<tr class="state-row"><td colspan="7">No vouchers found.</td></tr>';
+    }
+
+    function showError(msg) {
+      document.getElementById('voucher-tbody').innerHTML =
+        '<tr class="state-row err"><td colspan="7">Error: ' + esc(msg) + '</td></tr>';
+    }
+
+    /* ══════════════════════════════════════════════════════════════════════
+       ASSIGN — per-row
+    ══════════════════════════════════════════════════════════════════════ */
+    function onAssignChange(sel) {
+      var id    = sel.dataset.id;
+      var staff = sel.value;
+
+      if (staff) {
+        assignments[id] = staff;
+        sel.classList.add('assigned');
+        MBBridge.notification.showSuccess({ message: 'Assigned to ' + staff, duration: 2000 });
+        MBBridge.events.logProductEvent({
+          eventName:  'voucher_assigned',
+          properties: { staffName: staff },
+        });
+      } else {
+        delete assignments[id];
+        sel.classList.remove('assigned');
+      }
+
+      saveAssignments(assignments);
+    }
+
+    /* ══════════════════════════════════════════════════════════════════════
+       ASSIGN — bulk (from selection bar)
+    ══════════════════════════════════════════════════════════════════════ */
+    function bulkAssign() {
+      var staff = document.getElementById('bulk-assign-select').value;
+      if (!staff || selectedIds.size === 0) return;
+
+      selectedIds.forEach(function(id) {
+        if (staff) {
+          assignments[id] = staff;
+        } else {
+          delete assignments[id];
+        }
+        // Update the row's select in-place if it's currently rendered
+        var sel = document.querySelector('.assign-select[data-id="' + id + '"]');
+        if (sel) {
+          sel.value = staff;
+          sel.classList.toggle('assigned', !!staff);
+        }
+      });
+
+      saveAssignments(assignments);
+
+      var n = selectedIds.size;
+      MBBridge.notification.showSuccess({
+        message: n + ' voucher' + (n === 1 ? '' : 's') + ' assigned to ' + staff,
+        duration: 2500,
+      });
+      MBBridge.events.logProductEvent({
+        eventName:  'vouchers_bulk_assigned',
+        properties: { count: n, staffName: staff },
+      });
+
+      clearSelection();
+    }
+
+    /* ══════════════════════════════════════════════════════════════════════
+       FORMATTERS
+    ══════════════════════════════════════════════════════════════════════ */
+    function fmtDate(dateStr) {
+      if (!dateStr) return '—';
+      var d = new Date(dateStr);
+      if (isNaN(d)) return esc(dateStr);
+      return d.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+    }
+
+    function fmtAmount(amt) {
+      if (amt == null || amt === '') return '—';
+      var n = parseFloat(amt);
+      return isNaN(n) ? esc(String(amt)) : '&#8377;' + n.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+
+    function statusPill(v) {
+      if (v.cancelled_at)                       return '<span class="pill pill-cancelled">Cancelled</span>';
+      if (v.payment_status === 'paid')           return '<span class="pill pill-paid">Paid</span>';
+      if (v.payment_status === 'partially_paid') return '<span class="pill pill-partial">Partial</span>';
+      if (v.is_overdue)                          return '<span class="pill pill-overdue">Overdue</span>';
+      return '<span class="pill pill-unpaid">Unpaid</span>';
+    }
+
+    function esc(str) {
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+
+    /* ══════════════════════════════════════════════════════════════════════
+       SELECTION
+    ══════════════════════════════════════════════════════════════════════ */
+    function toggleRow(cb, id) {
+      if (cb.checked) selectedIds.add(id);
+      else            selectedIds.delete(id);
+
+      var row = cb.closest('tr');
+      if (row) row.classList.toggle('selected', cb.checked);
+
+      syncSelectAll();
+      updateSelectionBar();
+    }
+
+    function toggleSelectAll() {
+      var master = document.getElementById('select-all');
+      document.querySelectorAll('#voucher-tbody .voucher-row').forEach(function(row) {
+        var id = row.dataset.id;
+        var cb = row.querySelector('.row-cb');
+        if (!cb) return;
+        cb.checked = master.checked;
+        row.classList.toggle('selected', master.checked);
+        if (master.checked) selectedIds.add(id);
+        else                selectedIds.delete(id);
+      });
+      updateSelectionBar();
+    }
+
+    function syncSelectAll() {
+      var all     = document.querySelectorAll('#voucher-tbody .row-cb');
+      var checked = document.querySelectorAll('#voucher-tbody .row-cb:checked');
+      var master  = document.getElementById('select-all');
+      master.indeterminate = checked.length > 0 && checked.length < all.length;
+      master.checked       = all.length > 0 && checked.length === all.length;
+    }
+
+    function clearSelection() {
+      selectedIds.clear();
+      document.querySelectorAll('#voucher-tbody .row-cb').forEach(function(cb) { cb.checked = false; });
+      document.querySelectorAll('#voucher-tbody .voucher-row').forEach(function(r) { r.classList.remove('selected'); });
+      var master = document.getElementById('select-all');
+      master.checked = false;
+      master.indeterminate = false;
+      updateSelectionBar();
+    }
+
+    function updateSelectionBar() {
+      var bar = document.getElementById('sel-bar');
+      var n   = selectedIds.size;
+
+      if (n === 0) {
+        bar.classList.remove('visible');
+        return;
+      }
+
+      bar.classList.add('visible');
+      document.getElementById('sel-count').textContent = n + (n === 1 ? ' voucher selected' : ' vouchers selected');
+
+      var total = 0;
+      selectedIds.forEach(function(id) {
+        var v = voucherMap[id];
+        if (v) total += parseFloat(v.amount) || 0;
+      });
+      document.getElementById('sel-total').textContent = '· Total ₹' + total.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+      /* Keep bulk-assign button enabled only when a staff is chosen */
+      syncBulkAssignBtn();
+    }
+
+    function syncBulkAssignBtn() {
+      var sel = document.getElementById('bulk-assign-select');
+      document.getElementById('bulk-assign-btn').disabled = !sel.value;
+    }
+
+    /* ══════════════════════════════════════════════════════════════════════
+       PAGINATION
+    ══════════════════════════════════════════════════════════════════════ */
+    function setPaginationEnabled(on) {
+      document.getElementById('prev-btn').disabled = !on || currentPage <= 1;
+      document.getElementById('next-btn').disabled = !on || isLastPage;
+    }
+
+    function prevPage() { if (currentPage > 1) loadVouchers(currentPage - 1); }
+    function nextPage() { if (!isLastPage)      loadVouchers(currentPage + 1); }
+
+    /* ══════════════════════════════════════════════════════════════════════
+       FILTERS + SEARCH
+    ══════════════════════════════════════════════════════════════════════ */
+    function setFilter(filter, btn) {
+      currentFilter = filter;
+      document.querySelectorAll('.filter-tabs .tab').forEach(function(t) { t.classList.remove('active'); });
+      btn.classList.add('active');
+      loadVouchers(1);
+    }
+
+    function onSearch() {
+      clearTimeout(searchTimer);
+      searchTimer = setTimeout(function() { loadVouchers(1); }, 400);
+    }
+
+    /* ══════════════════════════════════════════════════════════════════════
+       STAFF MODAL
+    ══════════════════════════════════════════════════════════════════════ */
+    function rebuildStaffSelects() {
+      /* Refresh all row-level selects after staff list changes */
+      document.querySelectorAll('.assign-select').forEach(function(sel) {
+        var id         = sel.dataset.id;
+        var assignedTo = assignments[id] || '';
+        sel.innerHTML  = buildStaffOptions(assignedTo);
+        sel.classList.toggle('assigned', !!assignedTo);
+      });
+
+      /* Rebuild bulk-assign dropdown */
+      var bulk = document.getElementById('bulk-assign-select');
+      bulk.innerHTML = '<option value="">— Select staff —</option>';
+      for (var i = 0; i < staffList.length; i++) {
+        var opt = document.createElement('option');
+        opt.value       = staffList[i];
+        opt.textContent = staffList[i];
+        bulk.appendChild(opt);
+      }
+      syncBulkAssignBtn();
+    }
+
+    function renderStaffModal() {
+      var html = '';
+      if (staffList.length === 0) {
+        html = '<p style="font-size:13px;color:var(--text-muted);margin-bottom:10px">No staff added yet.</p>';
+      }
+      for (var i = 0; i < staffList.length; i++) {
+        var name     = staffList[i];
+        var initials = name.split(' ').map(function(w) { return w[0]; }).slice(0, 2).join('').toUpperCase();
+        html +=
+          '<div class="staff-item">' +
+            '<div class="staff-item-avatar">' + esc(initials) + '</div>' +
+            '<span class="staff-item-name">'  + esc(name)     + '</span>' +
+            '<button class="btn-remove-staff" onclick="removeStaff(' + i + ')" title="Remove">&#10005;</button>' +
+          '</div>';
+      }
+      document.getElementById('staff-list').innerHTML = html;
+    }
+
+    function openStaffModal() {
+      renderStaffModal();
+      document.getElementById('new-staff-input').value = '';
+      document.getElementById('staff-modal').classList.add('open');
+    }
+
+    function closeStaffModal() {
+      document.getElementById('staff-modal').classList.remove('open');
+      rebuildStaffSelects();
+    }
+
+    function onModalOverlayClick(e) {
+      if (e.target === document.getElementById('staff-modal')) closeStaffModal();
+    }
+
+    function addStaff() {
+      var input = document.getElementById('new-staff-input');
+      var name  = input.value.trim();
+      if (!name) return;
+      if (staffList.indexOf(name) !== -1) {
+        MBBridge.notification.showWarning({ message: name + ' is already in the list.' });
+        return;
+      }
+      staffList.push(name);
+      saveStaff(staffList);
+      input.value = '';
+      renderStaffModal();
+    }
+
+    function removeStaff(idx) {
+      var removed = staffList.splice(idx, 1)[0];
+      saveStaff(staffList);
+
+      /* Clear assignments pointing to this staff */
+      Object.keys(assignments).forEach(function(id) {
+        if (assignments[id] === removed) delete assignments[id];
+      });
+      saveAssignments(assignments);
+
+      renderStaffModal();
+    }
+
+    /* ══════════════════════════════════════════════════════════════════════
+       NAVIGATION
+    ══════════════════════════════════════════════════════════════════════ */
+    function goBack() {
+      MBBridge.destroy();
+      MBBridge.navigation.navigateBack({ isFallbackToHome: true });
+    }
+
+    /* ══════════════════════════════════════════════════════════════════════
+       BOOT
+    ══════════════════════════════════════════════════════════════════════ */
+
+    /* Wire bulk-assign select change so the Assign button stays in sync */
+    document.getElementById('bulk-assign-select').addEventListener('change', syncBulkAssignBtn);
+
+    /* Seed the bulk-assign dropdown before first paint */
+    rebuildStaffSelects();
+
+    onMount();
+  </script>
+</body>
+</html>
